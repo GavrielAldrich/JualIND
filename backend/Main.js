@@ -54,7 +54,7 @@ app.get('/', (req, res)=>{
     res.sendFile(indexPath);
 });
 
-app.get('/getBuyers', (req, res) => {
+app.get('/api/getBuyers', (req, res) => {
     db.query("SELECT * FROM users", (err, result, fields) => {
         if (err) {
             console.error('Error executing MySQL query:', err);
@@ -65,7 +65,7 @@ app.get('/getBuyers', (req, res) => {
     });
 });
 
-app.get('/getSession', async (req, res) => {
+app.get('/api/getSession', async (req, res) => {
     try {
         if(!req.session){
             req.session = false
@@ -77,7 +77,7 @@ app.get('/getSession', async (req, res) => {
     }
 });
 
-app.get('/logout', async (req, res) => {
+app.get('/api/logout', async (req, res) => {
     try {
         req.session.destroy(function (err) {
             if (err) {
@@ -94,7 +94,7 @@ app.get('/logout', async (req, res) => {
     }
 });
 
-app.post('/login', async (req, res) => {
+app.post('/api/login', async (req, res) => {
     const { userEmail, userPassword } = req.body;
     const lowerCasedEmail = userEmail.toLowerCase();
     try {
@@ -113,10 +113,10 @@ app.post('/login', async (req, res) => {
                     req.session.authenticated = true
                     req.session.userEmail = checkAvailEmail.email
                     req.session.userID = checkAvailEmail.id
-                    res.status(201).json({ message: 'Correct Password', verified: result});
+                    res.status(201).json({ message: 'Correct Password', authenticated: result});
                   } else {
                     console.log("Wrong password");
-                    res.status(200).json({ message: 'Wrong Password', verified: false });
+                    res.status(200).json({ message: 'Wrong Password', authenticated: false });
                   }
                 }
               });
@@ -130,7 +130,7 @@ app.post('/login', async (req, res) => {
     }
   });
 
-app.post('/register', async (req, res) => {
+app.post('/api/register', async (req, res) => {
     try {
         const { userEmail, userPassword } = req.body;
         const lowerCasedEmail = userEmail.toLowerCase();
@@ -170,12 +170,6 @@ async function findUserData(data){
         })
     });
 }
-
-// async function findSession(data){
-//     return await new Promise((resolve, reject)=>{
-//         db.query("SELECT * FROM sessions WHERE data = ? ")
-//     })
-// }
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
