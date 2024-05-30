@@ -1,111 +1,96 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import api from "../axiosAPI";
 
-function Header_view() {
+export default function Header_view() {
+  const [isLoggedIn, setLogIn] = useState(false);
+  const [loading, setLoading] = useState(true); // Add a loading state
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await api.get("/api/getSession");
+        const isAuthenticated = response.data.authenticated;
+        setLogIn(isAuthenticated);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false); // Set loading to false after fetching data
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleLogout = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await api.delete("/api/logout");
+      if (response.status === 200) {
+        setLogIn(false);
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  };
+
   return (
-    <header>
-      <div id="top-header">
-        <div className="container">
-          <ul className="header-links pull-left">
-            <li><a href="#"><i className="fa fa-phone"></i> +021-95-51-84</a></li>
-            <li><a href="#"><i className="fa fa-envelope-o"></i> email@email.com</a></li>
-            <li><a href="#"><i className="fa fa-map-marker"></i> 1734 Stonecoal Road</a></li>
-          </ul>
-          <ul className="header-links pull-right">
-            <li><a href="#"><i className="fa fa-dollar"></i> USD</a></li>
-            <li><a href="#"><i className="fa fa-user-o"></i> My Account</a></li>
-          </ul>
+    <div className="header container">
+      <header className="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-4">
+        <div className="col-md-3 mb-2 mb-md-0">
+          <a href="/" className="d-inline-flex text-decoration-none">
+            <h3 className="logo jual montserrat" style={{ margin: "0px" }}>
+              JUAL<span>iND</span>
+            </h3>
+          </a>
         </div>
-      </div>
 
-      <div id="header">
-        <div className="container">
-          <div className="row">
-            <div className="col-md-3">
-              <div className="header-logo">
-                <a href="#" className="logo">
-                  <img src="./img/logo.png" alt="Logo" />
-                </a>
-              </div>
-            </div>
+        <ul className="nav col-12 col-md-auto mb-2 justify-content-center mb-md-0">
+          <li>
+            <a href="/" className="nav-link px-2 link-light">
+              Home
+            </a>
+          </li>
+          <li>
+            <a href="" className="nav-link px-2 link-light">
+              New Games
+            </a>
+          </li>
+          <li>
+            <a href="" className="nav-link px-2 link-light">
+              About Us
+            </a>
+          </li>
+        </ul>
 
-            <div className="col-md-6">
-              <div className="header-search">
-                <form>
-                  <select className="input-select">
-                    <option value="0">All Categories</option>
-                    <option value="1">Category 01</option>
-                    <option value="2">Category 02</option>
-                  </select>
-                  <input className="input" placeholder="Search here" />
-                  <button className="search-btn">Search</button>
-                </form>
-              </div>
-            </div>
-
-            <div className="col-md-3 clearfix">
-              <div className="header-ctn">
-                <div>
-                  <a href="#">
-                    <i className="fa fa-heart-o"></i>
-                    <span>Your Wishlist</span>
-                    <div className="qty">2</div>
-                  </a>
-                </div>
-
-                <div className="dropdown">
-                  <a className="dropdown-toggle" href="#">
-                    <i className="fa fa-shopping-cart"></i>
-                    <span>Your Cart</span>
-                    <div className="qty">3</div>
-                  </a>
-                  <div className="cart-dropdown">
-                    <div className="cart-list">
-                      <div className="product-widget">
-                        <div className="product-img">
-                          <img src="./img/product01.png" alt="Product 01" />
-                        </div>
-                        <div className="product-body">
-                          <h3 className="product-name"><a href="#">product name goes here</a></h3>
-                          <h4 className="product-price"><span className="qty">1x</span>$980.00</h4>
-                        </div>
-                        <button className="delete"><i className="fa fa-close"></i></button>
-                      </div>
-
-                      <div className="product-widget">
-                        <div className="product-img">
-                          <img src="./img/product02.png" alt="Product 02" />
-                        </div>
-                        <div className="product-body">
-                          <h3 className="product-name"><a href="#">product name goes here</a></h3>
-                          <h4 className="product-price"><span className="qty">3x</span>$980.00</h4>
-                        </div>
-                        <button className="delete"><i className="fa fa-close"></i></button>
-                      </div>
-                    </div>
-                    <div className="cart-summary">
-                      <small>3 Item(s) selected</small>
-                      <h5>SUBTOTAL: $2940.00</h5>
-                    </div>
-                    <div className="cart-btns">
-                      <a href="#">View Cart</a>
-                      <a href="#">Checkout <i className="fa fa-arrow-circle-right"></i></a>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="menu-toggle">
-                  <a href="#">
-                    <i className="fa fa-bars"></i>
-                    <span>Menu</span>
-                  </a>
-                </div>
-              </div>
+        {loading ? ( // Show loading indicator while checking login status
+          <div className="col-md-3 text-end">
+            <div className="spinner-border text-danger" role="status">
+              <span className="visually-hidden">Loading...</span>
             </div>
           </div>
-        </div>
-      </div>
-    </header>
+        ) : isLoggedIn ? (
+          <div className="col-md-3 text-end">
+            <form onSubmit={handleLogout}>
+              <button type="submit" className="btn btn-danger me-2">
+                Logout
+              </button>
+            </form>
+          </div>
+        ) : (
+          <div className="col-md-3 text-end">
+            <a href="http://localhost:3000/login">
+              <button type="button" className="btn btn-outline-danger me-2">
+                Login
+              </button>
+            </a>
+            <a href="http://localhost:3000/register">
+              <button type="button" className="btn btn-danger">
+                Register
+              </button>
+            </a>
+          </div>
+        )}
+      </header>
+    </div>
   );
 }
-
-export default Header_view;

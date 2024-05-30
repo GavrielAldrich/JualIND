@@ -1,11 +1,9 @@
 import React from "react";
 
-function WrongPassword(){
+export default function WrongPassword(){
     return (
         <div className="wrongPassword">
             You inputted the wrong password
         </div>
     )
 }
-
-export default WrongPassword;

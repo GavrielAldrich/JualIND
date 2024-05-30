@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Form from './views/Form_view';
 import api from './axiosAPI';
 
-function Register() {
+export default function Register() {
   const [userData, setUserData] = useState({
     userEmail: '',
     userPassword: '',
@@ -64,4 +64,3 @@ function Register() {
   );
 }
 
-export default Register;
