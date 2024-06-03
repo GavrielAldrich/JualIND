@@ -74,8 +74,8 @@ app.get("/api/getSession", async (req, res) => {
   try {
     if (!req.session) {
       req.session = false;
-      console.log("Session is not found")
-      res.status(400).json({ message: "Session is not found" })
+      console.log("Session is not found");
+      res.status(400).json({ message: "Session is not found" });
     }
     res.status(200).json(req.session);
   } catch (error) {
@@ -84,13 +84,12 @@ app.get("/api/getSession", async (req, res) => {
   }
 });
 
-
 app.delete("/api/logout", async (req, res) => {
   try {
     req.session.destroy(function (err) {
-      if(err){
-        console.log("Error destroying session")
-        res.status(400).json({message: "Error destroying session"})
+      if (err) {
+        console.log("Error destroying session");
+        res.status(400).json({ message: "Error destroying session" });
       }
       console.log("Session destroyed successfully");
       res.status(200).json({ message: "Logout successful" });
@@ -114,10 +113,14 @@ app.post("/api/login", async (req, res) => {
           req.session.authenticated = true;
           req.session.userEmail = checkAvailEmail.email;
           req.session.userID = checkAvailEmail.id;
-          res.status(200).json({ message: "Correct Password", authenticated: result });
+          res
+            .status(200)
+            .json({ message: "Correct Password", authenticated: result });
         } else {
           console.log("Wrong password");
-          res.status(400).json({ message: "Wrong Password", authenticated: false });
+          res
+            .status(400)
+            .json({ message: "Wrong Password", authenticated: false });
         }
       });
     } else {
@@ -144,39 +147,18 @@ app.post("/api/register", async (req, res) => {
         message: "Email is already in use, please log in",
         isRegistered: true,
       });
-    } else {
-      const saltRounds = 10;
-      const salt = await bcrypt.genSalt(saltRounds);
-      const hashedPassword = await bcrypt.hash(userPassword, salt);
-
-      db.query(
-        "INSERT INTO users (email, password) VALUES (?, ?)",
-        [lowerCasedEmail, hashedPassword],
-        (err, result) => {
-          res.status(200).send({
-            message: "User Registered Succesfully",
-            successRegister: true,
-          });
-        }
-      );
     }
-  } catch (error) {
-    console.error("Error registering user:", error);
-    res.status(500).send("Internal Server Error");
-  }
-});
+    const saltRounds = 10;
+    const salt = await bcrypt.genSalt(saltRounds);
+    const hashedPassword = await bcrypt.hash(userPassword, salt);
 
-app.get("/api/games/:selectedGame", async (req, res)=>{
-  var findGame = req.params.selectedGame
-  console.log(req.body.name)
-  try {
     db.query(
-      "SELECT * FROM games_items WHERE game_name = ?",
-      [findGame],
+      "INSERT INTO users (email, password) VALUES (?, ?)",
+      [lowerCasedEmail, hashedPassword],
       (err, result) => {
         res.status(200).send({
-          message: "Game found.",
-          data: result
+          message: "User Registered Succesfully",
+          successRegister: true,
         });
       }
     );
@@ -186,8 +168,28 @@ app.get("/api/games/:selectedGame", async (req, res)=>{
   }
 });
 
-app.post("/api/games/:game_name", (req, res) => {
-  console.log(req.body); 
+app.get("/api/games/:selectedGame", async (req, res) => {
+  var findGame = req.params.selectedGame;
+  console.log(req.body.name);
+  try {
+    db.query(
+      "SELECT * FROM games_items WHERE game_name = ?",
+      [findGame],
+      (err, result) => {
+        res.status(200).send({
+          message: "Game found.",
+          data: result,
+        });
+      }
+    );
+  } catch (error) {
+    console.error("Error registering user:", error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+app.post("/api/games/:selectedGame", (req, res) => {
+  console.log(req.body);
 });
 
 async function findUserData(data) {
