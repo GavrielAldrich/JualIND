@@ -1,10 +1,10 @@
-import React from 'react';
-import Home_view from './views/Home_view';
+import React from "react";
+import PopularGames_view from "./views/PopularGames_view";
 
 export default function Home() {
-    return (
-    <Home_view/> 
-)
+  return (
+    <>
+      <PopularGames_view />
+    </>
+  );
 }
-
-

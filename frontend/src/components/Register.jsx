@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';    
 import { useNavigate } from 'react-router-dom';
-import Form from './views/Form_view';
+import Form_view from './views/Form_view';
 import api from './axiosAPI';
 
 export default function Register() {
+  const [loading, setLoading] = useState(false)
   const [userData, setUserData] = useState({
     userEmail: '',
     userPassword: '',
@@ -28,6 +29,7 @@ export default function Register() {
   }, [navigate]);
 
   const handleSubmit = async (event) => {
+    setLoading(true)
     event.preventDefault();
     try {
       const response = await api.post("/api/register", userData);
@@ -38,6 +40,8 @@ export default function Register() {
       }
     } catch (error) {
       console.error('Error fetching user data:', error);
+    } finally {
+      setLoading(false)
     }
   };
 
@@ -50,7 +54,7 @@ export default function Register() {
   };
 
   return (
-    <Form
+    <Form_view
       formID="register"
       formTitle="Register"
       userData={userData}

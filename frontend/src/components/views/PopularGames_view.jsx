@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from 'react-router-dom';
 import item_logo from "../../img/mlbb-image.png";
 
-export default function MostPopular_view() {
+export default function PopularGames_view() {
   const navigate = useNavigate();
 
   const handleButtonClick = (game) => {

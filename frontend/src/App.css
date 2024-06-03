@@ -32,6 +32,7 @@ header{
 
 /* MOST POPULAR SECTION */
 #most-popular-games{
+  margin-top: 35px;
   background: linear-gradient(to bottom, #fff 5%, #1d1d1d 0% ); /* Half black, half white */
 }
 .most-popular-title{
@@ -99,6 +100,19 @@ header{
   border-radius: 10px;
   max-height: 75px;
   max-width: 75px;
+}
+
+/* STORE CONTAINER / SECTION */
+#store-container{
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 20px;
+}
+#store-container button{
+  text-align: start;
 }
 
 /* LOGIN & REGISTER FORM CSS */
@@ -186,15 +200,20 @@ form h3{
 .input-box.button button:hover{
   background: #b10421;
 }
+.input-box.button button:disabled{
+  background: grey;
+}
 form .text h3{
  color: #333;
  width: 100%;
  text-align: center;
 }
-form .text h3 a{
+form .text h3 button{
+  border: 0px;
+  background-color: #fff;
   color: #d10024;
   text-decoration: none;
 }
-form .text h3 a:hover{
+form .text h3 button:hover{
   text-decoration: underline;
 }

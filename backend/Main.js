@@ -74,6 +74,8 @@ app.get("/api/getSession", async (req, res) => {
   try {
     if (!req.session) {
       req.session = false;
+      console.log("Session is not found")
+      res.status(400).json({ message: "Session is not found" })
     }
     res.status(200).json(req.session);
   } catch (error) {
@@ -82,9 +84,14 @@ app.get("/api/getSession", async (req, res) => {
   }
 });
 
+
 app.delete("/api/logout", async (req, res) => {
   try {
     req.session.destroy(function (err) {
+      if(err){
+        console.log("Error destroying session")
+        res.status(400).json({message: "Error destroying session"})
+      }
       console.log("Session destroyed successfully");
       res.status(200).json({ message: "Logout successful" });
     });
@@ -95,6 +102,7 @@ app.delete("/api/logout", async (req, res) => {
 });
 
 app.post("/api/login", async (req, res) => {
+  // await new Promise(resolve => setTimeout(resolve, 2000));
   try {
     const { userEmail, userPassword } = req.body;
     const lowerCasedEmail = userEmail.toLowerCase();
@@ -106,14 +114,14 @@ app.post("/api/login", async (req, res) => {
           req.session.authenticated = true;
           req.session.userEmail = checkAvailEmail.email;
           req.session.userID = checkAvailEmail.id;
-          res.status(201).json({ message: "Correct Password", authenticated: result });
+          res.status(200).json({ message: "Correct Password", authenticated: result });
         } else {
           console.log("Wrong password");
-          res.status(200).json({ message: "Wrong Password", authenticated: false });
+          res.status(400).json({ message: "Wrong Password", authenticated: false });
         }
       });
     } else {
-      res.status(200).json({
+      res.status(404).json({
         message: "User is not available / found, please Register",
         isLoggedIn: false,
       });
@@ -132,7 +140,7 @@ app.post("/api/register", async (req, res) => {
 
     if (checkAvailEmail) {
       console.log("Register fail, user is already registered");
-      res.status(200).json({
+      res.status(400).json({
         message: "Email is already in use, please log in",
         isRegistered: true,
       });
@@ -160,6 +168,7 @@ app.post("/api/register", async (req, res) => {
 
 app.get("/api/games/:selectedGame", async (req, res)=>{
   var findGame = req.params.selectedGame
+  console.log(req.body.name)
   try {
     db.query(
       "SELECT * FROM games_items WHERE game_name = ?",
@@ -177,14 +186,18 @@ app.get("/api/games/:selectedGame", async (req, res)=>{
   }
 });
 
+app.post("/api/games/:game_name", (req, res) => {
+  console.log(req.body); 
+});
+
 async function findUserData(data) {
   return await new Promise((resolve, reject) => {
     db.query("SELECT * FROM users WHERE email = ?", [data], (err, result) => {
-      if (err) {
-        reject(err);
-      } else {
+      try {
         console.log("User Data is found");
         resolve(result[0]);
+      } catch (err) {
+        reject(err);
       }
     });
   });
