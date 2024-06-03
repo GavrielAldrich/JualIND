@@ -2,13 +2,10 @@ import express from "express";
 import bodyParser from "body-parser";
 import mysql from "mysql";
 import cors from "cors";
-
 import session from "express-session";
 import expressMySqlSession from "express-mysql-session";
-
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";
-
 import bcrypt from "bcrypt";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -19,6 +16,7 @@ const app = express();
 
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
 // Enable CORS
 app.use(
   cors({
@@ -70,65 +68,52 @@ app.get("/api/getBuyers", (req, res) => {
   });
 });
 
-app.get("/api/getSession", async (req, res) => {
-  try {
-    if (!req.session) {
-      req.session = false;
-      console.log("Session is not found");
-      res.status(400).json({ message: "Session is not found" });
-    }
-    res.status(200).json(req.session);
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Internal Server Error" });
+app.get("/api/getSession", (req, res) => {
+  if (!req.session) {
+    console.log("Session is not found");
+    res.status(400).json({ message: "Session is not found" });
+    return;
   }
+  res.status(200).json(req.session);
 });
 
-app.delete("/api/logout", async (req, res) => {
-  try {
-    req.session.destroy(function (err) {
-      if (err) {
-        console.log("Error destroying session");
-        res.status(400).json({ message: "Error destroying session" });
-      }
-      console.log("Session destroyed successfully");
-      res.status(200).json({ message: "Logout successful" });
-    });
-  } catch (error) {
-    console.error("Error logging out:", error);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
+app.delete("/api/logout", (req, res) => {
+  req.session.destroy(function (err) {
+    if (err) {
+      console.log("Error destroying session");
+      res.status(400).json({ message: "Error destroying session" });
+      return;
+    }
+    console.log("Session destroyed successfully");
+    res.status(200).json({ message: "Logout successful" });
+  });
 });
 
 app.post("/api/login", async (req, res) => {
-  // await new Promise(resolve => setTimeout(resolve, 2000));
   try {
     const { userEmail, userPassword } = req.body;
     const lowerCasedEmail = userEmail.toLowerCase();
     const checkAvailEmail = await findUserData(lowerCasedEmail);
-    if (checkAvailEmail) {
-      const storedHashedPassword = checkAvailEmail.password;
-      bcrypt.compare(userPassword, storedHashedPassword, (err, result) => {
-        if (result) {
-          req.session.authenticated = true;
-          req.session.userEmail = checkAvailEmail.email;
-          req.session.userID = checkAvailEmail.id;
-          res
-            .status(200)
-            .json({ message: "Correct Password", authenticated: result });
-        } else {
-          console.log("Wrong password");
-          res
-            .status(400)
-            .json({ message: "Wrong Password", authenticated: false });
-        }
-      });
-    } else {
+    if (!checkAvailEmail) {
       res.status(404).json({
         message: "User is not available / found, please Register",
         isLoggedIn: false,
       });
+      return;
     }
+    const storedHashedPassword = checkAvailEmail.password;
+    bcrypt.compare(userPassword, storedHashedPassword, (err, result) => {
+      if (err || !result) {
+        console.log("Wrong password");
+        res.status(400).json({ message: "Wrong Password", authenticated: false });
+        return;
+      }
+
+      req.session.authenticated = true;
+      req.session.userEmail = checkAvailEmail.email;
+      req.session.userID = checkAvailEmail.id;
+      res.status(200).json({ message: "Correct Password", authenticated: result });
+    });
   } catch (error) {
     console.log(error);
     res.status(500).send("Internal Server Error");
@@ -142,11 +127,11 @@ app.post("/api/register", async (req, res) => {
     const checkAvailEmail = await findUserData(lowerCasedEmail);
 
     if (checkAvailEmail) {
-      console.log("Register fail, user is already registered");
       res.status(400).json({
         message: "Email is already in use, please log in",
-        isRegistered: true,
+        isRegistered: false,
       });
+      return;
     }
     const saltRounds = 10;
     const salt = await bcrypt.genSalt(saltRounds);
@@ -156,8 +141,13 @@ app.post("/api/register", async (req, res) => {
       "INSERT INTO users (email, password) VALUES (?, ?)",
       [lowerCasedEmail, hashedPassword],
       (err, result) => {
+        if (err) {
+          console.log("There is error while registering to database");
+          res.status(501).send("Internal Server Error");
+          return;
+        }
         res.status(200).send({
-          message: "User Registered Succesfully",
+          message: "User Registered Successfully",
           successRegister: true,
         });
       }
@@ -168,38 +158,56 @@ app.post("/api/register", async (req, res) => {
   }
 });
 
-app.get("/api/games/:selectedGame", async (req, res) => {
-  var findGame = req.params.selectedGame;
-  console.log(req.body.name);
-  try {
-    db.query(
-      "SELECT * FROM games_items WHERE game_name = ?",
-      [findGame],
-      (err, result) => {
-        res.status(200).send({
-          message: "Game found.",
-          data: result,
-        });
+app.get("/api/games/:selectedGame", (req, res) => {
+  const findGame = req.params.selectedGame;
+  db.query(
+    "SELECT * FROM game_items WHERE game_name = ?",
+    [findGame],
+    (err, result) => {
+      if (err) {
+        console.error("Error finding game:", err);
+        res.status(500).send("Internal Server Error");
+        return;
       }
-    );
-  } catch (error) {
-    console.error("Error registering user:", error);
-    res.status(500).send("Internal Server Error");
-  }
+      res.status(200).send({
+        message: "Game found.",
+        data: result,
+      });
+    }
+  );
 });
 
-app.post("/api/games/:selectedGame", (req, res) => {
-  console.log(req.body);
+app.post("/api/sellItem", (req, res) => {
+  const { game_name, seller_username, item_price, item_title, item_description } = req.body;
+
+  db.query(
+    "INSERT INTO game_items (game_name, seller_username, item_price, item_title, item_description) VALUES (?, ?, ?, ?, ?)",
+    [game_name, seller_username, item_price, item_title, item_description],
+    (err, result) => {
+      if (err) {
+        console.log("Error while inserting item to database", err);
+        res.status(400).send("Error while inserting item to database");
+        return;
+      }
+      res.status(200).send("Success inserting item into database");
+    }
+  );
 });
 
-async function findUserData(data) {
+async function findUserData(email) {
   return await new Promise((resolve, reject) => {
-    db.query("SELECT * FROM users WHERE email = ?", [data], (err, result) => {
-      try {
-        console.log("User Data is found");
-        resolve(result[0]);
-      } catch (err) {
+    db.query("SELECT * FROM users WHERE email = ?", [email], (err, result) => {
+      if (err) {
+        console.error("Error finding user data:", err);
         reject(err);
+        return;
+      }
+      if (result.length > 0) {
+        console.log("User data found.");
+        resolve(result[0]);
+      } else {
+        console.log("User data not found.");
+        resolve(null);
       }
     });
   });

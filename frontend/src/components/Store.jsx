@@ -9,6 +9,7 @@ export default function Store() {
     const fetchData = async () => {
       try {
         const response = await api.get(`/api/games/${game}`);
+        console.log(response)
       } catch (error) {
         console.error("Error fetching data:", error);
       }
