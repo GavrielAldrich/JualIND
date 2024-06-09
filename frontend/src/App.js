@@ -6,6 +6,7 @@ import NoPage from "./components/NoPage";
 import Store from "./components/Store";
 import Home from "./components/Home";
 import Navbar from "./components/Navbar";
+import Product from "./components/Product";
 import TestSendFile from "./components/TestSendFile";
 import "./App.css";
 
@@ -23,6 +24,7 @@ export default function App() {
         <Route path="/store/:game" element={<Store />} />
         <Route path="/test" element={<TestSendFile/>} />
         <Route path="*" element={<NoPage />} />
+        <Route path="product/:game/:store/:id" element={<Product />} />
       </Routes>
     </BrowserRouter>
   );

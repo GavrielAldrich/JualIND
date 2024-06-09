@@ -7,15 +7,13 @@ import expressMySqlSession from "express-mysql-session";
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";
 import bcrypt from "bcrypt";
+import { rateLimit } from "express-rate-limit";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const indexPath = path.join(__dirname, "public", "index.html");
 
 const MySQLStore = expressMySqlSession(session);
 const app = express();
-
-app.use(express.json());
-app.use(bodyParser.urlencoded({ extended: true }));
 
 // Enable CORS
 app.use(
@@ -41,6 +39,7 @@ const sessionStore = new MySQLStore(
   db
 );
 
+// Session
 app.use(
   session({
     secret: "TOPSECRETWORD",
@@ -52,6 +51,16 @@ app.use(
     },
   })
 );
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+app.use(limiter);
+app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
   res.sendFile(indexPath);
@@ -105,14 +114,18 @@ app.post("/api/login", async (req, res) => {
     bcrypt.compare(userPassword, storedHashedPassword, (err, result) => {
       if (err || !result) {
         console.log("Wrong password");
-        res.status(400).json({ message: "Wrong Password", authenticated: false });
+        res
+          .status(400)
+          .json({ message: "Wrong Password", authenticated: false });
         return;
       }
 
       req.session.authenticated = true;
       req.session.userEmail = checkAvailEmail.email;
       req.session.userID = checkAvailEmail.id;
-      res.status(200).json({ message: "Correct Password", authenticated: result });
+      res
+        .status(200)
+        .json({ message: "Correct Password", authenticated: result });
     });
   } catch (error) {
     console.log(error);
@@ -178,7 +191,13 @@ app.get("/api/games/:selectedGame", (req, res) => {
 });
 
 app.post("/api/sellItem", (req, res) => {
-  const { game_name, seller_username, item_price, item_title, item_description } = req.body;
+  const {
+    game_name,
+    seller_username,
+    item_price,
+    item_title,
+    item_description,
+  } = req.body;
 
   db.query(
     "INSERT INTO game_items (game_name, seller_username, item_price, item_title, item_description) VALUES (?, ?, ?, ?, ?)",
