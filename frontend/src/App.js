@@ -24,7 +24,7 @@ export default function App() {
         <Route path="/store/:game" element={<Store />} />
         <Route path="/test" element={<TestSendFile/>} />
         <Route path="*" element={<NoPage />} />
-        <Route path="product/:game/:store/:id" element={<Product />} />
+        <Route path="product/:game/:seller/:id" element={<Product />} />
       </Routes>
     </BrowserRouter>
   );

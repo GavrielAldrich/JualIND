@@ -58,7 +58,8 @@ const limiter = rateLimit({
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
-app.use(limiter);
+
+// app.use(limiter);
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -66,17 +67,7 @@ app.get("/", (req, res) => {
   res.sendFile(indexPath);
 });
 
-app.get("/api/getBuyers", (req, res) => {
-  db.query("SELECT * FROM users", (err, result, fields) => {
-    if (err) {
-      console.error("Error executing MySQL query:", err);
-      res.status(500).send("Internal Server Error");
-      return;
-    }
-    res.json(result);
-  });
-});
-
+// GET SESSION
 app.get("/api/getSession", (req, res) => {
   if (!req.session) {
     console.log("Session is not found");
@@ -86,53 +77,7 @@ app.get("/api/getSession", (req, res) => {
   res.status(200).json(req.session);
 });
 
-app.delete("/api/logout", (req, res) => {
-  req.session.destroy(function (err) {
-    if (err) {
-      console.log("Error destroying session");
-      res.status(400).json({ message: "Error destroying session" });
-      return;
-    }
-    console.log("Session destroyed successfully");
-    res.status(200).json({ message: "Logout successful" });
-  });
-});
-
-app.post("/api/login", async (req, res) => {
-  try {
-    const { userEmail, userPassword } = req.body;
-    const lowerCasedEmail = userEmail.toLowerCase();
-    const checkAvailEmail = await findUserData(lowerCasedEmail);
-    if (!checkAvailEmail) {
-      res.status(404).json({
-        message: "User is not available / found, please Register",
-        isLoggedIn: false,
-      });
-      return;
-    }
-    const storedHashedPassword = checkAvailEmail.password;
-    bcrypt.compare(userPassword, storedHashedPassword, (err, result) => {
-      if (err || !result) {
-        console.log("Wrong password");
-        res
-          .status(400)
-          .json({ message: "Wrong Password", authenticated: false });
-        return;
-      }
-
-      req.session.authenticated = true;
-      req.session.userEmail = checkAvailEmail.email;
-      req.session.userID = checkAvailEmail.id;
-      res
-        .status(200)
-        .json({ message: "Correct Password", authenticated: result });
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).send("Internal Server Error");
-  }
-});
-
+// POST REGISTER
 app.post("/api/register", async (req, res) => {
   try {
     const { userEmail, userPassword } = req.body;
@@ -171,6 +116,58 @@ app.post("/api/register", async (req, res) => {
   }
 });
 
+// POST LOGIN
+app.post("/api/login", async (req, res) => {
+  try {
+    const { userEmail, userPassword } = req.body;
+    const lowerCasedEmail = userEmail.toLowerCase();
+    const checkAvailEmail = await findUserData(lowerCasedEmail);
+    if (!checkAvailEmail) {
+      res.status(404).json({
+        message: "User is not available / found, please Register",
+        isLoggedIn: false,
+      });
+      return;
+    }
+    const storedHashedPassword = checkAvailEmail.password;
+    bcrypt.compare(userPassword, storedHashedPassword, (err, result) => {
+      if (err || !result) {
+        console.log("Wrong password");
+        res
+          .status(400)
+          .json({ message: "Wrong Password", authenticated: false });
+        return;
+      }
+
+      req.session.user = {
+        email: checkAvailEmail.email,
+        id: checkAvailEmail.id,
+      };
+      req.session.authenticated = true;
+      res
+        .status(200)
+        .json({ message: "Correct Password", authenticated: result });
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+// DELETE LOGOUT / SESSION
+app.delete("/api/logout", (req, res) => {
+  req.session.destroy(function (err) {
+    if (err) {
+      console.log("Error destroying session");
+      res.status(400).json({ message: "Error destroying session" });
+      return;
+    }
+    console.log("Session destroyed successfully");
+    res.status(200).json({ message: "Logout successful" });
+  });
+});
+
+// GET SELECTED GAMES
 app.get("/api/games/:selectedGame", (req, res) => {
   const findGame = req.params.selectedGame;
   db.query(
@@ -190,6 +187,17 @@ app.get("/api/games/:selectedGame", (req, res) => {
   );
 });
 
+app.get("/api/product/:game/:seller/:id", (req, res) => {
+  const { game, seller, id } = req.params;
+  try {
+    res.status(200).json({message:"Success"})
+  } catch (error) {
+    console.log(error)
+    res.status(500).send("Internal Server Error")
+  }
+});
+
+// POST A NEW ITEM
 app.post("/api/sellItem", (req, res) => {
   const {
     game_name,
@@ -213,6 +221,7 @@ app.post("/api/sellItem", (req, res) => {
   );
 });
 
+// FUNCTION AREA
 async function findUserData(email) {
   return await new Promise((resolve, reject) => {
     db.query("SELECT * FROM users WHERE email = ?", [email], (err, result) => {
