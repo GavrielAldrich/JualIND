@@ -1,18 +1,16 @@
 import express from "express";
 import bodyParser from "body-parser";
-import mysql from "mysql";
 import cors from "cors";
 import session from "express-session";
-import expressMySqlSession from "express-mysql-session";
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";
-import bcrypt from "bcrypt";
 import { rateLimit } from "express-rate-limit";
+import { userLogin, userLogout, userRegister } from "./routes/auth.js";
+import { sessionStore } from "./utils/store.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const indexPath = path.join(__dirname, "public", "index.html");
 
-const MySQLStore = expressMySqlSession(session);
 const app = express();
 
 // Enable CORS
@@ -23,23 +21,6 @@ app.use(
   })
 );
 
-// Database
-const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "jualind_db",
-});
-
-const sessionStore = new MySQLStore(
-  {
-    expiration: 1000 * 600, // 10 minutes
-    endConnectionOnClose: false,
-  },
-  db
-);
-
-// Session
 app.use(
   session({
     secret: "TOPSECRETWORD",
@@ -78,94 +59,13 @@ app.get("/api/getSession", (req, res) => {
 });
 
 // POST REGISTER
-app.post("/api/register", async (req, res) => {
-  try {
-    const { userEmail, userPassword } = req.body;
-    const lowerCasedEmail = userEmail.toLowerCase();
-    const checkAvailEmail = await findUserData(lowerCasedEmail);
-
-    if (checkAvailEmail) {
-      res.status(400).json({
-        message: "Email is already in use, please log in",
-        isRegistered: false,
-      });
-      return;
-    }
-    const saltRounds = 10;
-    const salt = await bcrypt.genSalt(saltRounds);
-    const hashedPassword = await bcrypt.hash(userPassword, salt);
-
-    db.query(
-      "INSERT INTO users (email, password) VALUES (?, ?)",
-      [lowerCasedEmail, hashedPassword],
-      (err, result) => {
-        if (err) {
-          console.log("There is error while registering to database");
-          res.status(501).send("Internal Server Error");
-          return;
-        }
-        res.status(200).send({
-          message: "User Registered Successfully",
-          successRegister: true,
-        });
-      }
-    );
-  } catch (error) {
-    console.error("Error registering user:", error);
-    res.status(500).send("Internal Server Error");
-  }
-});
+app.post("/api/register", userRegister);
 
 // POST LOGIN
-app.post("/api/login", async (req, res) => {
-  try {
-    const { userEmail, userPassword } = req.body;
-    const lowerCasedEmail = userEmail.toLowerCase();
-    const checkAvailEmail = await findUserData(lowerCasedEmail);
-    if (!checkAvailEmail) {
-      res.status(404).json({
-        message: "User is not available / found, please Register",
-        isLoggedIn: false,
-      });
-      return;
-    }
-    const storedHashedPassword = checkAvailEmail.password;
-    bcrypt.compare(userPassword, storedHashedPassword, (err, result) => {
-      if (err || !result) {
-        console.log("Wrong password");
-        res
-          .status(400)
-          .json({ message: "Wrong Password", authenticated: false });
-        return;
-      }
-
-      req.session.user = {
-        email: checkAvailEmail.email,
-        id: checkAvailEmail.id,
-      };
-      req.session.authenticated = true;
-      res
-        .status(200)
-        .json({ message: "Correct Password", authenticated: result });
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).send("Internal Server Error");
-  }
-});
+app.post("/api/login", userLogin);
 
 // DELETE LOGOUT / SESSION
-app.delete("/api/logout", (req, res) => {
-  req.session.destroy(function (err) {
-    if (err) {
-      console.log("Error destroying session");
-      res.status(400).json({ message: "Error destroying session" });
-      return;
-    }
-    console.log("Session destroyed successfully");
-    res.status(200).json({ message: "Logout successful" });
-  });
-});
+app.delete("/api/logout", userLogout);
 
 // GET SELECTED GAMES
 app.get("/api/games/:selectedGame", (req, res) => {
@@ -187,13 +87,14 @@ app.get("/api/games/:selectedGame", (req, res) => {
   );
 });
 
+// GET SELECTED PRODUCT
 app.get("/api/product/:game/:seller/:id", (req, res) => {
   const { game, seller, id } = req.params;
   try {
-    res.status(200).json({message:"Success"})
+    res.status(200).json({ message: "Success" });
   } catch (error) {
-    console.log(error)
-    res.status(500).send("Internal Server Error")
+    console.log(error);
+    res.status(500).send("Internal Server Error");
   }
 });
 
