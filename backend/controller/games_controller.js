@@ -8,8 +8,8 @@ export const selectedGames = (req, res) => {
     (err, result) => {
       if (err) {
         console.error("Error finding game:", err);
-        res.status(500).send("Internal Server Error");
-        return;
+        return res.status(500).send("Internal Server Error");
+        // Use `return` to exit the function after sending the response
       }
       res.status(200).send({
         message: "Game found.",

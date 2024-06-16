@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Form_view from './views/Form_view';
+import Auth_view from './views/Auth_view';
 import api from './axiosAPI';
 
 export default function Login({ setLogIn }) {
@@ -53,7 +53,7 @@ export default function Login({ setLogIn }) {
   };
 
   return (
-    <Form_view
+    <Auth_view
       formID="login"
       formTitle="Login"
       userData={userData}

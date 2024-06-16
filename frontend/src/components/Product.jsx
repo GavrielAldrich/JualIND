@@ -1,19 +1,22 @@
 import React, { useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { Product_view } from "./views/Product_view";
 import api from "./axiosAPI";
 
 export default function Product() {
   const { game, seller, id } = useParams();
+  const [product, setProduct] = React.useState(null);
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await api.get(`/api/product/${game}/${seller}/${id}`);
-        console.log(response)
+        setProduct(response.data.data[0]);
       } catch (error) {
-        console.log(error)
+        console.log(error);
       }
     };
-    fetchData()
+    fetchData();
   }, [game, seller, id]);
-  return <h1>Product Page</h1>;
+
+  return product ? <Product_view data={product} /> : <h1>Loading...</h1>;
 }

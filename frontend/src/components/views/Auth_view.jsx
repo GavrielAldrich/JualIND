@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-const Form_view = ({
+const Auth_view = ({
   formID,
   formTitle,
   userData,
@@ -15,7 +15,7 @@ const Form_view = ({
 }) => {
   const navigate = useNavigate();
   return (
-    <div id={formID}>
+    <section id={formID}>
       <div className="wrapper">
         <h2>{formTitle}</h2>
         <form onSubmit={handleSubmit}>
@@ -49,8 +49,8 @@ const Form_view = ({
           </div>
         </form>
       </div>
-    </div>
+    </section>
   );
 };
 
-export default Form_view;
+export default Auth_view;
