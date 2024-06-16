@@ -4,10 +4,11 @@ import session from "express-session";
 
 const MySQLStore = expressMySqlSession(session);
 
-export const sessionStore = new MySQLStore(
+const sessionStore = new MySQLStore(
   {
     expiration: 1000 * 600,
     endConnectionOnClose: false,
   },
   db
 );
+export default sessionStore
