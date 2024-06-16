@@ -6,6 +6,7 @@ import path, { dirname } from "path";
 import { fileURLToPath } from "url";
 import { rateLimit } from "express-rate-limit";
 import { userLogin, userLogout, userRegister } from "./routes/auth.js";
+import { db } from "./utils/db.js";
 import { sessionStore } from "./utils/store.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
