@@ -6,16 +6,10 @@ import cors from "cors";
 import { db } from "./utils/db.js";
 import limiter from "./utils/limiter.js";
 import sessionStore from "./utils/store.js";
-import {
-  userLogin,
-  userLogout,
-  userRegister,
-  userSession,
-} from "./routes/auth.js";
-// import selectedGames from "./routes/games.js";
+import auth from "./routes/auth_route.js"
 import gameRouter from "./routes/games_route.js"
 import indexRouter from "./routes/index_route.js"
-import sellerProduct from "./routes/product.js";
+import productRouter from "./routes/product_route.js"
 
 const app = express();
 
@@ -43,26 +37,17 @@ app.use(
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// Index router
 app.use("/", indexRouter);
 
+// Route of Login, Register, Logout, Session
+app.use("/api", auth)
 
-// GET SESSION
-app.get("/api/getSession", userSession);
-
-// POST REGISTER
-app.post("/api/register", userRegister);
-
-// POST LOGIN
-app.post("/api/login", userLogin);
-
-// DELETE LOGOUT / SESSION
-app.delete("/api/logout", userLogout);
-
-// GET SELECTED GAMES
+// Route to find selected game
 app.use("/api", gameRouter);
 
-// GET SELECTED PRODUCT
-app.get("/api/product/:game/:seller/:id", sellerProduct);
+// Route to find selected product
+app.use("/api", productRouter)
 
 // POST A NEW ITEM
 app.post("/api/sellItem", (req, res) => {
