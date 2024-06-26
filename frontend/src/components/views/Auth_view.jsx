@@ -15,7 +15,7 @@ const Auth_view = ({
 }) => {
   const navigate = useNavigate();
   return (
-    <section id={formID}>
+    <main id={formID}>
       <div className="wrapper">
         <h2>{formTitle}</h2>
         <form onSubmit={handleSubmit}>
@@ -49,7 +49,7 @@ const Auth_view = ({
           </div>
         </form>
       </div>
-    </section>
+    </main>
   );
 };
 

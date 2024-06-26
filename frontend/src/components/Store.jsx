@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Store_view from "./views/Store_view";
+import Card_view from "./views/Card_view";
 import api from "./axiosAPI";
 
 export default function Store() {
@@ -34,6 +34,17 @@ export default function Store() {
   return !gameData ? (
     <h1>Loading...</h1>
   ) : (
-    <Store_view gameData={gameData} handleClick={handleClick} />
+    <main id="store-container">
+      {gameData.map((data) => (
+        <button
+          key={data.id}
+          className="card"
+          onClick={() => handleClick(data)}
+          style={{ width: "18rem" }}
+        >
+          <Card_view data={data} />
+        </button>
+      ))}
+    </main>
   );
 }

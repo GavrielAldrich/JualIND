@@ -3,19 +3,27 @@ import api from "./axiosAPI";
 
 export default function TestSendFile() {
   const [sellerData, setSellerData] = useState({
-    game_name: '',
-    seller_username: '',
-    item_price: '',
-    item_title: '',
-    item_description: '',
+    game_name: "",
+    seller_username: "",
+    item_price: "",
+    item_title: "",
+    item_description: "",
+    item_image: null,
   });
 
   function handleChange(event) {
-    const { name, value } = event.target;
-    setSellerData(prevState => ({
-      ...prevState,
-      [name]: value
-    }));
+    const { name, value, files } = event.target;
+    if (name === "item_image") {
+      setSellerData((prevState) => ({
+        ...prevState,
+        item_image: files[0], // Assuming single file upload
+      }));
+    } else {
+      setSellerData((prevState) => ({
+        ...prevState,
+        [name]: value,
+      }));
+    }
   }
 
   async function handleSubmit(event) {
@@ -25,7 +33,7 @@ export default function TestSendFile() {
       for (const key in sellerData) {
         formData.append(key, sellerData[key]);
       }
-      await api.post("/api/games/mobile-legend", formData, {
+      await api.post("/api/sellItem", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -51,7 +59,15 @@ export default function TestSendFile() {
       <input type="text" name="item_title" id="" onChange={handleChange} />
 
       <p>Item Description</p>
-      <input type="text" name="item_description" id="" onChange={handleChange} />
+      <input
+        type="text"
+        name="item_description"
+        id=""
+        onChange={handleChange}
+      />
+
+      <p>Item Image</p>
+      <input type="file" name="item_image" id="" onChange={handleChange} />
 
       <input type="submit" />
     </form>

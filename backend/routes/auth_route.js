@@ -4,8 +4,8 @@ import { userSession, userRegister, userLogin, userLogout } from "../controller/
 var router = express.Router();
 
 router.get("/getSession", userSession);
+router.post("/login", userLogin);
 router.post("/register", userRegister);
 router.delete("/logout", userLogout);
-router.post("/login", userLogin);
 
 export default router;
